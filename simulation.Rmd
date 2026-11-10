@@ -65,7 +65,7 @@ sim_results_df |>
 
 
 ## Change `n`
-```{r, chache = TRUE}
+```{r, cache = TRUE}
 sim_results_df = 
  expand_grid(
    samp_size = c(30, 60, 120, 240),
