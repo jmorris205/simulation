@@ -1,0 +1,89 @@
+---
+title: "Simulation"
+author: "Jonathan Morris"
+date: "2026-11-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load functions/packages:
+```{r}
+source("sim_mean_sd.R")
+library(tidyverse)
+```
+## Create a sim:
+```{r}
+output = vector("list", 1000)
+
+for (i in 1:1000) {
+  output[[i]] = sim_mean_sd(30)
+}
+
+sim_results = bind_rows(output)
+```
+
+## Inspect Results:
+
+```{r}
+## Look at mean output:
+output |> 
+  bind_rows() |> 
+  summarize(
+    emp_m = mean(mu_hat),
+    emp_se = sd(mu_hat)
+  )
+
+## Plot outputs:
+output |> 
+  bind_rows() |> 
+  ggplot(aes(x = mu_hat)) +
+  geom_density()
+```
+
+## DO this using tibbles and map:
+
+```{r}
+sim_results_df = 
+  tibble(
+    sample_size = rep(30, 1000)
+  ) |> 
+  mutate(
+    est_df = map(sample_size, sim_mean_sd)
+    ) |> 
+  unnest(est_df)
+```
+
+## Look at results:
+```{r}
+sim_results_df |> 
+  ggplot(aes(x = mu_hat)) +
+  geom_density()
+```
+
+
+## Change `n`
+```{r, chache = TRUE}
+sim_results_df = 
+ expand_grid(
+   samp_size = c(30, 60, 120, 240),
+   iter = 1:1000
+ ) |> 
+  mutate(
+    est_df = map(samp_size, sim_mean_sd)
+    ) |> 
+  unnest(est_df)
+```
+
+```{r}
+sim_results_df |> 
+  mutate(
+    samp_size = str_c("n = ", samp_size),
+    samp_size = fct_inorder(samp_size)
+  ) |> 
+  ggplot(aes(x = samp_size, y = mu_hat)) +
+  geom_violin()
+```
+
