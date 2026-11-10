@@ -87,3 +87,89 @@ sim_results_df |>
   geom_violin()
 ```
 
+
+
+
+## Simple Linear Regression... !!! (SLR)
+```{r}
+sim_data =
+  tibble(
+    x = rnorm(30, mean = 1, sd = 1),
+    y = 2 + 3*x + rnorm(30, mean = 0, sd = 1)
+  )
+
+sim_data |> 
+  ggplot(aes(x = x, y = y)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+fit = sim_data |> 
+  lm(y ~ x, data = _)
+```
+## Run with sim_slr:
+```{r}
+source("sim_slr.R")
+
+slr_results_df = 
+ expand_grid(
+   samp_size = c(30, 60, 120, 240),
+   iter = 1:1000
+ ) |> 
+  mutate(
+    est_df = map(samp_size, sim_slr)
+    ) |> 
+  unnest(est_df)
+```
+
+```{r}
+slr_results_df |> 
+  ggplot(aes(x = beta0_hat, y = beta1_hat, color = factor(samp_size))) +
+  geom_point()
+```
+
+## Birthday Problem:
+```{r}
+birthdays = sample(1:365, size = 5, replace = TRUE)
+
+repeated_birthdays = length(unique(birthdays)) < 5
+
+print(repeated_birthdays)
+```
+
+turn this into a function
+
+```{r}
+source("birthday_repeated.R")
+
+birthday_repeated(100)
+```
+
+## Run it a bunch:
+```{r}
+birthday_results_df = 
+  tibble(
+    number_of_people = rep(5, 10000)
+  ) |> 
+  mutate(
+    repeated = map_lgl(number_of_people, birthday_repeated)
+  )
+
+birthday_large_df = 
+  expand_grid(
+   number_of_people = c(5:100),
+   iter = 1:1000
+ ) |> 
+  mutate(
+    repeated = map_lgl(number_of_people, birthday_repeated)
+  ) |> 
+  group_by(number_of_people) |> 
+  summarize(p = mean(repeated))
+```
+
+```{r}
+birthday_large_df |> 
+  ggplot(aes(x = number_of_people, y = p)) +
+  geom_point() +
+  geom_line()
+```
+
